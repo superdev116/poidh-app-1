@@ -3,13 +3,11 @@ import React, { useEffect, useState } from 'react';
 import { useBountyContext } from '@/components/bounty/BountyProvider';
 import NoProof from '@/components/bounty/NoProof';
 import ProofList from '@/components/bounty/ProofList';
-import Voting from '@/components/bounty/Voting';
 
 import {  bountyCurrentVotingClaim, getClaimsByBountyId} from '@/app/context/web3';
+import { blacklist, blacklistedBounties } from '@/constant/blacklist';
 
 import { Claim } from '@/types/web3';
-
-
 
 
 const BountyProofs = ({ bountyId }: { bountyId: string }) => {
@@ -18,17 +16,26 @@ const BountyProofs = ({ bountyId }: { bountyId: string }) => {
   const { isMultiplayer, isOwner, bountyData, isBountyClaimed} = useBountyContext()!;
 
 
-
   useEffect(() => {
     // setYouOwner(null); 
     if (bountyId) {
+
       // getParticipants(bountyId)
       // .then((openBounty) => { 
       //   setOpenBounty(openBounty.addresses.length === 0 ? false : true);
       // })
       // .catch(console.error);  
       getClaimsByBountyId(bountyId)
-      .then(data => setClaimsData(data))
+      .then(data => {
+        // Filter claims based on blacklist criteria
+        let filteredClaims = data;
+        blacklist.forEach(bounty => {
+          if (bounty.bountyId === Number(bountyId)) {
+            filteredClaims = filteredClaims.filter(claim => !bounty.claims.includes(Number(claim.id)));
+          }
+        });
+        setClaimsData(filteredClaims);
+      })
       .catch(console.error);
   
       (async () => {
@@ -40,6 +47,11 @@ const BountyProofs = ({ bountyId }: { bountyId: string }) => {
   
 
   console.log("current voting claim:", currentVotingClaim)
+
+  // Early exit if bountyId is blacklisted
+  if (blacklistedBounties.includes(Number(bountyId))) {
+    return null; // Do not render anything if the bounty is blacklisted
+  }
 
   return (
     <div>

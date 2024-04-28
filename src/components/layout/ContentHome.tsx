@@ -8,9 +8,9 @@ import ToggleButton from "@/components/ui/ToggleButton";
 
 import { networks } from "@/app/context/config";
 import { fetchAllBounties } from "@/app/context/web3";
+import { blacklistedBounties } from '@/constant/blacklist';
 
 import { BountiesData } from '../../types/web3';
- 
 
 
 const ContentHome = () => {
@@ -72,8 +72,10 @@ const ContentHome = () => {
 
   useEffect(() => {
     // Filter bountiesData into openBounties and pastBounties
-    const open = bountiesData.filter(bounty => bounty.claimer !== "0x0000000000000000000000000000000000000000");
-    const past = bountiesData.filter(bounty => bounty.claimer === "0x0000000000000000000000000000000000000000");
+    const open = bountiesData.filter(bounty => bounty.claimer !== "0x0000000000000000000000000000000000000000" &&
+    !blacklistedBounties.includes(Number(bounty.id)));
+    const past = bountiesData.filter(bounty => bounty.claimer === "0x0000000000000000000000000000000000000000" &&
+    !blacklistedBounties.includes(Number(bounty.id)));
 
     setOpenBounties(open);
     setPastBounties(past);

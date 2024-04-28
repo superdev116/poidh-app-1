@@ -1,8 +1,11 @@
-import { cancelOpenBounty, cancelSoloBounty } from '@/app/context/web3';
+import { useDynamicContext } from '@dynamic-labs/sdk-react-core';
+
 import BountyMultiplayer from '@/components/bounty/BountyMultiplayer';
 import { useBountyContext } from '@/components/bounty/BountyProvider';
 import CreateProof from '@/components/ui/CreateProof';
-import { useDynamicContext } from '@dynamic-labs/sdk-react-core';
+
+import { cancelOpenBounty, cancelSoloBounty } from '@/app/context/web3';
+import { blacklistedBounties } from '@/constant/blacklist';
 
 
 
@@ -21,6 +24,11 @@ const BountyInfo = ({ bountyId }: { bountyId: string }) => {
   console.log("Is multiplayer:", isMultiplayer)
   console.log("Is Owner:", isOwner)
   console.log("Is Claimed:", isBountyClaimed)
+
+    // Early exit if bountyId is blacklisted
+    if (blacklistedBounties.includes(Number(bountyId))) {
+      return null; // Do not render anything if the bounty is blacklisted
+    }
 
   const handleCancelBounty = async () => {
     if (primaryWallet) {
