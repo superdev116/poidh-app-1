@@ -6,6 +6,7 @@ import { useDropzone } from 'react-dropzone';
 import { createClaim } from '@/app/context/web3';
 
 import { buildMetadata, uploadFile, uploadMetadata } from '../../lib/pinata';
+import { toast } from 'react-toastify';
 
 interface FormProofProps {
   bountyId: string;
@@ -13,6 +14,10 @@ interface FormProofProps {
 }
 
 const FormProof: React.FC<FormProofProps> = ({ bountyId }) => {
+  const [walletMessage, setWalletMessage] = useState('');
+
+
+
   const onDrop = useCallback((acceptedFiles: File[]) => {
     const file = acceptedFiles[0];
     setFile(file);
@@ -90,7 +95,7 @@ const FormProof: React.FC<FormProofProps> = ({ bountyId }) => {
 
   const handleCreateClaim = async () => {
     if (!name || !description || !primaryWallet || !imageURI) {
-      alert('Please fill in all fields, upload an image, and connect wallet');
+      toast.error('Please fill in all fields, upload an image, and connect wallet');
       return;
     }
 
@@ -98,17 +103,17 @@ const FormProof: React.FC<FormProofProps> = ({ bountyId }) => {
       const metadata = buildMetadata(imageURI, name, description);
       const metadataResponse = await uploadMetadata(metadata);
       const uri = `https://beige-impossible-dragon-883.mypinata.cloud/ipfs/${metadataResponse.IpfsHash}`
-      console.log(uri)
-      console.log(metadataResponse.IpfsHash)
-      console.log(bountyId)
-      console.log(primaryWallet)
-      console.log(name)
       await createClaim(primaryWallet, name, uri, description, bountyId);
-      alert('Claim created successfully!');
-    } catch (error) {
+      toast.success('Claim created successfully!');
+    } catch (error: unknown) {
       console.error('Error creating claim:', error);
-      alert('Failed to create claim.');
-    }
+      const errorCode = (error as any)?.info?.error?.code;
+      if (errorCode === 4001) {
+          toast.error('Transaction denied by user');
+      } else {
+          toast.error('Failed to create claim');
+      }
+  }
   };
 
   return (
@@ -157,12 +162,35 @@ const FormProof: React.FC<FormProofProps> = ({ bountyId }) => {
         {uploading ? 'uploading...' : 'upload'}
       </button>
 
-      <button
-        className="border border-white mt-5 rounded-full px-5 py-2"
-        onClick={handleCreateClaim}
-      >
+    
+
+
+<button
+  className={`border border-white mt-5 rounded-full px-5 py-2 ${
+    !primaryWallet ? "opacity-50 cursor-not-allowed" : ""
+  }`}
+  onClick={() => {
+    if (!primaryWallet) {
+      toast.error("Please connect wallet to continue")
+      // setWalletMessage("Please connect wallet to continue");
+    } else {
+      handleCreateClaim();
+    }
+  }}
+  onMouseEnter={() => {
+    if (!primaryWallet) {
+      toast.error("Please connect wallet to continue")
+      // setWalletMessage("Please connect wallet to continue");
+    }
+  }}
+  onMouseLeave={() => {
+    setWalletMessage("");
+  }}
+>
         create claim
       </button>
+      <span id="walletMessage">{walletMessage}</span>
+
     </div>
   );
 };
