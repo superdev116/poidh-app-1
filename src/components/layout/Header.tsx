@@ -37,14 +37,6 @@ const Header = () => {
 
   return (
     <>
-      <Banner />
-      <div className='px-5 lg:px-20 pt-12 pb-2 border-b border-white flex justify-between items-center'>
-        <Link href='/'>
-          <Logo />
-        </Link>
-        <div className='hidden lg:block'>
-          <Menu menuPoints={['about us', 'how it works']} />
-        </div>
         <div className='flex flex-col '>
           <div className='flex flex-row  relative items-center gap-x-5'>
             {isClient && isAuthenticated ? (
